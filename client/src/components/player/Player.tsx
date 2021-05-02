@@ -2,6 +2,7 @@ import { ws } from "@/api/state";
 import {
   computed,
   defineComponent,
+  onMounted,
   ref,
   watch,
   watchEffect,
@@ -34,6 +35,10 @@ export const Player = defineComponent({
         }
       },
     );
+    const isMuted = ref(true);
+    onMounted(() => {
+      isMuted.value = false;
+    });
 
     return {
       player,
@@ -71,6 +76,7 @@ export const Player = defineComponent({
       toggle: () => {
         ws.send("togglePause", null);
       },
+      isMuted,
     };
   },
   render() {
@@ -132,6 +138,7 @@ export const Player = defineComponent({
 
         {this.activeTrack && (
           <audio
+            muted={this.isMuted}
             src={`/api/tracks/file/${this.activeTrack.id}`}
             onEnded={this.playlist.nextTrack}
             autoplay={this.player.state.isPlaying}
