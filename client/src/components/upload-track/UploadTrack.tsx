@@ -52,23 +52,23 @@ export const UploadTrack = defineComponent({
     return (
       <div class="p-4">
         <span class="font-bold text-gray-300">Add track:</span>
-        <div class="flex my-4" v-show={!this.pending}>
-          <label class="relative w-max block bg-blue-600 text-white shadow cursor-pointer hover:bg-blue-700">
+        <div class="flex flex-wrap my-4" v-show={!this.pending}>
+          <label class="relative w-max max-w-full block bg-blue-600 text-white shadow cursor-pointer hover:bg-blue-700">
             <input
               type="file"
               class="hidden"
               accept="audio/mpeg"
               onChange={this.setFile}
             />
-            <span class="block w-56 py-4 px-6 whitespace-nowrap overflow-ellipsis overflow-hidden">
+            <span class="block w-full md:w-56 py-4 px-6 whitespace-nowrap overflow-ellipsis overflow-hidden">
               {this.chosenFile.filename || "Choose file"}
             </span>
           </label>
           <button
             class={[
-              "px-4 shadow text-gray-200 bg-gray-900",
+              "px-4 py-2 shadow text-gray-200 bg-gray-900",
               {
-                "opacity-0 cursor-default": !this.chosenFile.url,
+                "opacity-30 cursor-default": !this.chosenFile.url,
               },
             ]}
             onClick={this.chosenFile.url ? this.upload : undefined}
