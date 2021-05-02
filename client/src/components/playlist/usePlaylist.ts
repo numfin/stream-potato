@@ -13,7 +13,7 @@ function usePlaylist() {
       tracks,
       position: computed(() => {
         return tracks.value.findIndex((track) => {
-          return track === player.state.activeTrack;
+          return track.id === player.state.activeTrack?.id;
         });
       }),
     }),
@@ -27,6 +27,7 @@ function usePlaylist() {
       this.load();
     },
     nextTrack() {
+      console.log("nexttrack");
       player.set(this.state.tracks[this.state.position + 1]);
     },
   };

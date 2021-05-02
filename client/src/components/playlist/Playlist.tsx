@@ -1,7 +1,5 @@
-import { removeTrack } from "@/api/removeTrack";
-import { defineComponent, ref } from "@vue/runtime-core";
+import { defineComponent } from "@vue/runtime-core";
 import { withModifiers } from "@vue/runtime-dom";
-import { Track } from "server/player/Track";
 import { player } from "../player/usePlayer";
 import { RemoveIcon } from "./RemoveIcon";
 import { playlist } from "./usePlaylist";
@@ -14,9 +12,6 @@ export const Playlist = defineComponent({
     return {
       playlist,
       player: player,
-      async removeTrack(track: Track) {
-        await playlist.removeTrack(track);
-      },
     };
   },
   render() {
@@ -31,7 +26,9 @@ export const Playlist = defineComponent({
               <span>{`${track.title}`}</span>
               <div
                 class="border border-white px-2 py-1 inline-block hover:bg-white text-white hover:text-gray-800"
-                onClick={withModifiers(() => this.removeTrack(track), ["stop"])}
+                onClick={withModifiers(() => this.playlist.removeTrack(track), [
+                  "stop",
+                ])}
               >
                 <RemoveIcon />
               </div>

@@ -8,6 +8,7 @@ export const Player = defineComponent({
     watch(
       () => playlist.state.position,
       (next, from) => {
+        console.log(next, from);
         if (next < 0 && from >= 0) {
           playlist.nextTrack();
         }
