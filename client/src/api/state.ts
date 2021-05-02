@@ -1,7 +1,7 @@
 import { player } from "@/components/player/usePlayer";
 import { ref } from "@vue/reactivity";
 import { watchEffect } from "@vue/runtime-core";
-import { ServerState } from "server/state/state.controller";
+import { ServerState } from "server/state/ServerState";
 
 const host = `ws://${location.host}/api/state`;
 

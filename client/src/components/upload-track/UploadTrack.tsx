@@ -1,47 +1,53 @@
 import { uploadTrack } from "@/api/uploadTrack";
-import { defineComponent, reactive, ref } from "@vue/runtime-core";
+import { defineComponent, ref } from "@vue/runtime-core";
 import { playlist } from "../playlist/usePlaylist";
 
 export const UploadTrack = defineComponent({
   name: "UploadTrack",
   setup() {
-    const chosenFile = reactive({
-      filename: "",
-      url: "",
-    });
-    const resetFile = () => {
-      chosenFile.filename = "";
-      chosenFile.url = "";
+    const pickedFiles = ref<{ filename: string; url: string }[]>([]);
+    const reset = () => {
+      pickedFiles.value = [];
     };
     const pending = ref(false);
 
     return {
-      chosenFile,
+      pickedFiles,
       pending,
       setFile(e: Event) {
-        const file = (e.target as HTMLInputElement)?.files?.[0];
-        if (file) {
-          chosenFile.filename = file.name;
-          URL.revokeObjectURL(chosenFile.url);
-          chosenFile.url = URL.createObjectURL(file);
-          chosenFile.filename = file.name;
-        }
+        const files = (e.target as HTMLInputElement)?.files ?? [];
+        pickedFiles.value = [...(files as File[])].map((file) => {
+          return {
+            filename: file.name,
+            url: URL.createObjectURL(file),
+          };
+        });
         (e.target as HTMLInputElement).value = "";
       },
       async upload() {
         pending.value = true;
 
         try {
-          const file = await fetch(chosenFile.url).then((r) => r.blob());
+          const files = await Promise.all(
+            pickedFiles.value.map((f) =>
+              fetch(f.url)
+                .then((r) => r.blob())
+                .then((file) => ({ file, meta: f })),
+            ),
+          );
 
-          await uploadTrack({
-            title: chosenFile.filename,
-            file,
-          });
+          await Promise.all(
+            files.map(({ file, meta }) => {
+              return uploadTrack({
+                title: meta.filename,
+                file,
+              });
+            }),
+          );
         } catch (err) {
           console.log(err);
         } finally {
-          resetFile();
+          reset();
           pending.value = false;
           playlist.load();
         }
@@ -59,19 +65,22 @@ export const UploadTrack = defineComponent({
               class="hidden"
               accept="audio/mpeg"
               onChange={this.setFile}
+              multiple
             />
             <span class="block w-full md:w-56 py-4 px-6 whitespace-nowrap overflow-ellipsis overflow-hidden">
-              {this.chosenFile.filename || "Choose file"}
+              {this.pickedFiles.length > 1
+                ? `Picked files (${this.pickedFiles.length})`
+                : this.pickedFiles[0]?.filename || "Choose file"}
             </span>
           </label>
           <button
             class={[
               "px-4 py-2 shadow text-gray-200 bg-gray-900",
               {
-                "opacity-30 cursor-default": !this.chosenFile.url,
+                "opacity-30 cursor-default": this.pickedFiles.length === 0,
               },
             ]}
-            onClick={this.chosenFile.url ? this.upload : undefined}
+            onClick={this.pickedFiles.length > 0 ? this.upload : undefined}
           >
             Confirm
           </button>
