@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "module": "CommonJS",
+    "strict": true,
+    "rootDir": "./"
+  },
+  "include": ["./server/index.ts", "./server/**.ts"],
+  "exclude": ["node_modules"]
+}
