@@ -1,16 +1,36 @@
+import { writeFile } from "fs/promises";
+import { readFileSync } from "fs";
+import { resolve } from "path";
+import { getPublicPath } from "../paths";
 import { Track } from "./Track";
+
+const playerStatePath = () => resolve(getPublicPath(), "player-state.json");
 
 export class PlayerState {
   private currentPlaying: Track | undefined;
   private isPlaying = false;
   private currentTime = 0;
 
+  constructor() {
+    try {
+      const cached = readFileSync(playerStatePath(), {
+        encoding: "utf-8",
+      }).toString();
+      const parsed = JSON.parse(cached) as PlayerState["state"];
+      this.currentPlaying = parsed.track;
+      this.isPlaying = parsed.isPlaying;
+      this.currentTime = parsed.currentTime;
+    } catch (err) {}
+  }
+
   public get state() {
-    return {
+    const state = {
       track: this.currentPlaying,
       isPlaying: this.isPlaying,
       currentTime: this.currentTime,
     };
+    writeFile(playerStatePath(), JSON.stringify(state));
+    return state;
   }
 
   change(track: Track) {

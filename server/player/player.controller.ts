@@ -6,12 +6,12 @@ import { getFileDuration } from "../ffmpeg/getFileDuration";
 import { app } from "../app";
 import { DB } from "../db/Db";
 import { ClientEvents } from "../state/WSEvents";
-import { sendPlaylist } from "../state/state.controller";
 import { getTrackPath } from "../paths";
+import { wsSendAll } from "../state/state.controller";
 
 export async function loadTrackList(): Promise<Track[]> {
   const dbData = await useDb().read();
-  return dbData?.tracks ?? [];
+  return dbData.tracks ?? [];
 }
 
 export async function getTrack(id: string): Promise<Track | undefined> {
@@ -27,7 +27,10 @@ export async function removeTrack({ id }: Track): Promise<void> {
   await unlink(getTrackPath(id));
   await db.write(dbData);
 
-  await sendPlaylist();
+  wsSendAll({
+    name: "playlist",
+    data: await loadTrackList(),
+  });
 }
 
 export async function addTrack(
@@ -48,7 +51,10 @@ export async function addTrack(
       duration,
     });
     await db.write(dbData);
-    await sendPlaylist();
+    wsSendAll({
+      name: "playlist",
+      data: await loadTrackList(),
+    });
   } catch (err) {
     app.log.error(err);
     await unlink(filePath).catch((err) => app.log.fatal(err));

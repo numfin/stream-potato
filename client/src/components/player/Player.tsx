@@ -1,9 +1,12 @@
+import { appState } from "@/app-state";
 import {
   computed,
   defineComponent,
   onMounted,
+  onUnmounted,
   ref,
   watch,
+  watchEffect,
 } from "@vue/runtime-core";
 import { playlist } from "../playlist/usePlaylist";
 import { NextIcon } from "./NextIcon";
@@ -14,23 +17,22 @@ import { player } from "./usePlayer";
 export const Player = defineComponent({
   name: "Player",
   setup() {
-    const volume = ref(localStorage.getItem("player-volume") ?? "0.5");
+    const volume = ref(localStorage.getItem("player-volume") ?? "1");
 
     watch(
       () => player.state.isPlaying,
-      (isPlaying) => {
+      async (isPlaying) => {
+        console.log(isPlaying);
         const { audioEl } = player.state;
-        isPlaying ? audioEl?.play() : audioEl?.pause();
+        if (audioEl && audioEl.paused !== !isPlaying) {
+          try {
+            isPlaying ? await audioEl?.play() : audioEl?.pause();
+          } catch (err) {
+            console.log(err);
+          }
+        }
       },
     );
-
-    const isMuted = ref(true);
-    onMounted(() => {
-      setTimeout(() => {
-        isMuted.value = false;
-      }, 200);
-    });
-
     return {
       player,
       activeTrack: computed(() => player.state.activeTrack),
@@ -42,7 +44,6 @@ export const Player = defineComponent({
           localStorage.setItem("player-volume", v);
         },
       }),
-      isMuted,
     };
   },
   render() {
@@ -104,12 +105,11 @@ export const Player = defineComponent({
 
         {this.activeTrack && (
           <audio
-            muted={this.isMuted}
             src={`/api/tracks/${this.activeTrack.id}`}
-            autoplay={this.player.state.isPlaying}
             onEnded={() => {
               this.player.nextTrack();
             }}
+            autoplay={this.player.state.isPlaying}
             ref={(el) => {
               const ael = el as HTMLMediaElement;
               player.state.audioEl = ael;

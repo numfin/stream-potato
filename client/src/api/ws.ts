@@ -1,4 +1,5 @@
 import { playlist } from "@/components/playlist/usePlaylist";
+import { blobToArrayBuffer } from "@/helpers/blobToArrayBuffer";
 import { ref } from "@vue/reactivity";
 import { watchEffect } from "@vue/runtime-core";
 import { deserialize, serialize } from "bson";
@@ -6,10 +7,11 @@ import { Buffer } from "buffer";
 import { ClientEvents, ServerEvents } from "server/state/WSEvents";
 import { updateState } from "./updateState";
 
-const host = `ws://${location.host}/api/ws`;
+const host = `ws://localhost:4000/api/ws`;
 
 type WSMessageEvent = ClientEvents;
 
+const RECONNECT_TIME = 5000;
 function useWS() {
   let client: WebSocket;
 
@@ -35,11 +37,15 @@ function useWS() {
     client.onclose = () => {
       stopWatching();
       wsState.value = WebSocket.CLOSED;
-      client.close();
       setTimeout(init, 500);
     };
+    setTimeout(() => {
+      if (wsState.value !== WebSocket.OPEN) {
+        client.close();
+      }
+    }, RECONNECT_TIME);
     client.onmessage = async (ev) => {
-      const buffer = Buffer.from(await (ev.data as Blob).arrayBuffer());
+      const buffer = Buffer.from(await blobToArrayBuffer(ev.data));
       const event = deserialize(buffer) as ServerEvents;
       if (event.name === "state") {
         updateState(event.data);

@@ -6,6 +6,6 @@
     "downlevelIteration": true,
     "target": "esnext"
   },
-  "include": ["./server/index.ts", "./server/**.ts"],
+  "include": ["server/index.ts", "server/**.ts"],
   "exclude": ["node_modules"]
 }

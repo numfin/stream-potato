@@ -1,4 +1,5 @@
 import { ws } from "@/api/ws";
+import { appState } from "@/app-state";
 import { reactive, ref } from "@vue/reactivity";
 import { Track } from "server/player/Track";
 import { player } from "../player/usePlayer";
@@ -16,7 +17,9 @@ function usePlaylist() {
       });
     },
     async removeTrack(track: Track) {
-      ws.send({ name: "removeTrack", data: track });
+      if (appState.state.isControl) {
+        ws.send({ name: "removeTrack", data: track });
+      }
     },
   };
 }

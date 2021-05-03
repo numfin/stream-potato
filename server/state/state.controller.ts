@@ -1,27 +1,21 @@
 import { serialize } from "bson";
+import WebSocket = require("ws");
 import { app } from "../app";
-import { useDb } from "../db/db.controller";
 import { playerState } from "../player/player.state";
 import { ServerEvents } from "./WSEvents";
 
-export function wsSend<E extends ServerEvents>(event: E) {
+export function wsSendAll<E extends ServerEvents>(event: E) {
   for (const client of app.websocketServer.clients.values()) {
     client.send(serialize(event));
   }
 }
-
-export function sendState() {
-  wsSend({
-    name: "state",
-    data: playerState.state,
-  });
+export function wsSend(client: WebSocket, event: ServerEvents) {
+  client.send(serialize(event));
 }
 
-export async function sendPlaylist() {
-  const dbData = await useDb().read();
-
-  wsSend({
-    name: "playlist",
-    data: dbData?.tracks ?? [],
-  });
+export function getState(): ServerEvents {
+  return {
+    name: "state",
+    data: playerState.state,
+  };
 }

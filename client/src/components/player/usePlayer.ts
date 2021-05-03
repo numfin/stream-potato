@@ -20,7 +20,11 @@ function usePlayer() {
           if (state.activeTrack) {
             ws.send({
               name: "setTime",
-              data: { track: state.activeTrack, time, silent: true },
+              data: {
+                track: state.activeTrack,
+                time,
+                silent: true,
+              },
             });
           }
         }
@@ -88,7 +92,7 @@ function usePlayer() {
       }
     },
     updateCurrentTime(progress: number) {
-      if (this.state.activeTrack) {
+      if (this.state.activeTrack && appState.state.isControl) {
         ws.send({
           name: "setTime",
           data: {
