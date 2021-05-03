@@ -9,8 +9,6 @@ import { Track } from "server/player/Track";
 export const Playlist = defineComponent({
   name: "Playlist",
   setup() {
-    playlist.load();
-
     const searchList = computed(
       () =>
         new Fuse(playlist.state.tracks, {
@@ -50,7 +48,7 @@ export const Playlist = defineComponent({
           return (
             <div
               class="px-4 py-2 cursor-pointer bg-gray-900 text-gray-200 hover:bg-gray-800 flex items-center justify-between"
-              onClick={() => this.playlist.setTrack(track)}
+              onClick={() => this.player.setTrack(track)}
             >
               <span>{`${track.title}`}</span>
               <div

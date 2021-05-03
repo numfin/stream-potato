@@ -1,26 +1,38 @@
+import { deserialize } from "bson";
 import { app } from "../app";
+import { addTrack, removeTrack } from "../player/player.controller";
 import { playerState } from "../player/player.state";
-import { Track } from "../player/Track";
-import { sendState } from "./state.controller";
-
-type StateEvents =
-  | { name: "changeTrack"; data: Track }
-  | { name: "togglePause" };
+import { sendPlaylist, sendState } from "./state.controller";
+import { ClientEvents } from "./WSEvents";
 
 export async function initStateRoute() {
-  app.get("/api/state", { websocket: true }, (connection) => {
-    sendState(connection);
+  app.get("/api/ws", { websocket: true }, (connection) => {
+    sendPlaylist();
+    sendState();
 
-    connection.socket.on("message", (message: string) => {
-      const event: StateEvents = JSON.parse(message);
-
-      if (event.name === "changeTrack") {
+    connection.socket.on("message", (body) => {
+      const event = deserialize(body as NodeJS.TypedArray) as ClientEvents;
+      if (event.name === "addTrack") {
+        addTrack(event);
+      }
+      if (event.name === "setTrack") {
         playerState.change(event.data);
+        playerState.afterChange();
+      }
+      if (event.name === "setTime") {
+        playerState.setTime(event.data.time);
+        playerState.change(event.data.track);
+        if (event.data.silent) {
+          return;
+        }
       }
       if (event.name === "togglePause") {
         playerState.togglePause();
       }
-      sendState(connection);
+      if (event.name === "removeTrack") {
+        removeTrack(event.data);
+      }
+      sendState();
     });
   });
 }

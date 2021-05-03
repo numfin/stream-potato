@@ -1,11 +1,9 @@
-import { ws } from "@/api/state";
 import {
   computed,
   defineComponent,
   onMounted,
   ref,
   watch,
-  watchEffect,
 } from "@vue/runtime-core";
 import { playlist } from "../playlist/usePlaylist";
 import { NextIcon } from "./NextIcon";
@@ -13,38 +11,30 @@ import { PlayIcon } from "./PlayIcon";
 import { PrevIcon } from "./PrevIcon";
 import { player } from "./usePlayer";
 
-const isNumber = (v: number) => isFinite(v) && !isNaN(v) && v;
-
 export const Player = defineComponent({
   name: "Player",
   setup() {
     const volume = ref(localStorage.getItem("player-volume") ?? "0.5");
-    const audioEl = ref<HTMLMediaElement>();
 
-    watchEffect(() => {
-      if (audioEl.value) {
-        player.state.isPlaying ? audioEl.value.play() : audioEl.value.pause();
-      }
-    });
-    const activeTrack = computed(() => player.state.activeTrack);
     watch(
-      () => activeTrack.value?.id,
-      (next, prev) => {
-        if (next !== prev) {
-          player.state.currentTime = 0;
-        }
+      () => player.state.isPlaying,
+      (isPlaying) => {
+        const { audioEl } = player.state;
+        isPlaying ? audioEl?.play() : audioEl?.pause();
       },
     );
+
     const isMuted = ref(true);
     onMounted(() => {
-      isMuted.value = false;
+      setTimeout(() => {
+        isMuted.value = false;
+      }, 200);
     });
 
     return {
       player,
-      activeTrack,
+      activeTrack: computed(() => player.state.activeTrack),
       playlist,
-      audioEl,
       volume: computed({
         get: () => volume.value,
         set: (v: string) => {
@@ -52,30 +42,6 @@ export const Player = defineComponent({
           localStorage.setItem("player-volume", v);
         },
       }),
-      currentTimeProgress: computed({
-        get: () => {
-          const progress = player.state.currentTime / player.state.duration;
-          if (isNumber(progress)) {
-            return progress * 100;
-          }
-          return 0;
-        },
-        set: (progress: number) => {
-          if (!audioEl.value) {
-            return;
-          }
-          if (isNumber(progress) && isNumber(player.state.duration)) {
-            audioEl.value.currentTime =
-              (player.state.duration * progress) / 100;
-          } else {
-            audioEl.value.currentTime = 0;
-          }
-          player.state.currentTime = audioEl.value.currentTime;
-        },
-      }),
-      toggle: () => {
-        ws.send("togglePause", null);
-      },
       isMuted,
     };
   },
@@ -92,11 +58,11 @@ export const Player = defineComponent({
               min="0"
               max="100"
               step="0.01"
-              value={this.currentTimeProgress}
+              value={this.player.state.currentServerTime}
               class="block h-8 w-full"
               onChange={(ev) => {
                 const progress = (ev.target as HTMLInputElement).value;
-                this.currentTimeProgress = Number(progress);
+                player.updateCurrentTime(Number(progress));
               }}
             />
           </label>
@@ -117,19 +83,19 @@ export const Player = defineComponent({
           >
             <div
               class="w-8 h-8 bg-white rounded flex items-center justify-center cursor-pointer hover:bg-gray-400"
-              onClick={() => this.playlist.prevTrack()}
+              onClick={() => this.player.prevTrack()}
             >
               <PrevIcon />
             </div>
             <div
               class="w-8 h-8 bg-white rounded flex items-center justify-center cursor-pointer hover:bg-gray-400"
-              onClick={this.toggle}
+              onClick={() => this.player.togglePause()}
             >
               <PlayIcon active={!this.player.state.isPlaying} />
             </div>
             <div
               class="w-8 h-8 bg-white rounded flex items-center justify-center cursor-pointer hover:bg-gray-400"
-              onClick={() => this.playlist.nextTrack()}
+              onClick={() => this.player.nextTrack()}
             >
               <NextIcon />
             </div>
@@ -139,21 +105,21 @@ export const Player = defineComponent({
         {this.activeTrack && (
           <audio
             muted={this.isMuted}
-            src={`/api/tracks/file/${this.activeTrack.id}`}
-            onEnded={this.playlist.nextTrack}
+            src={`/api/tracks/${this.activeTrack.id}`}
             autoplay={this.player.state.isPlaying}
+            onEnded={() => {
+              this.player.nextTrack();
+            }}
             ref={(el) => {
-              this.audioEl = el as HTMLMediaElement;
-              if (this.audioEl && !this.audioEl.currentTime) {
-                this.audioEl.currentTime = this.player.state.currentTime;
+              const ael = el as HTMLMediaElement;
+              player.state.audioEl = ael;
+              if (ael && !ael.currentTime) {
+                ael.currentTime = player.state.currentTime;
               }
             }}
             {...{
               volume: this.volume,
             }}
-            onDurationchange={(ev) =>
-              (this.player.state.duration = (ev.target as HTMLMediaElement).duration)
-            }
             onTimeupdate={(ev) => {
               const nextTime = (ev.target as HTMLMediaElement).currentTime;
               if (nextTime - this.player.state.currentTime > 1) {

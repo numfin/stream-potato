@@ -1,13 +1,13 @@
 import * as mkdirp from "mkdirp";
 import { app } from "./app";
-import { getTracksPath } from "./paths";
+import { getTrackPath } from "./paths";
 import { initPlayerRoutes } from "./player/player.route";
 import { initSpaRoute } from "./spa/spa.route";
 import { initStateRoute } from "./state/state.route";
 
 async function startServer() {
   try {
-    await mkdirp(getTracksPath());
+    await mkdirp(getTrackPath());
     await initPlayerRoutes();
     await initSpaRoute();
     await initStateRoute();

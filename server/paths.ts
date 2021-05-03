@@ -6,6 +6,6 @@ export function getClientPath() {
 export function getPublicPath() {
   return path.resolve(__dirname, "../public");
 }
-export function getTracksPath() {
-  return path.resolve(getPublicPath(), "tracks");
+export function getTrackPath(track?: string) {
+  return path.resolve(getPublicPath(), "tracks", track ?? "");
 }

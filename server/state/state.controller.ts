@@ -1,15 +1,27 @@
-import { SocketStream } from "fastify-websocket";
+import { serialize } from "bson";
+import { app } from "../app";
+import { useDb } from "../db/db.controller";
 import { playerState } from "../player/player.state";
-import { ServerState } from "./ServerState";
+import { ServerEvents } from "./WSEvents";
 
-export function sendState(connection: SocketStream) {
-  connection.socket.send(
-    JSON.stringify({
-      name: "state",
-      data: {
-        track: playerState.currentPlaying,
-        isPlaying: playerState.isPlaying,
-      } as ServerState,
-    }),
-  );
+export function wsSend<E extends ServerEvents>(event: E) {
+  for (const client of app.websocketServer.clients.values()) {
+    client.send(serialize(event));
+  }
+}
+
+export function sendState() {
+  wsSend({
+    name: "state",
+    data: playerState.state,
+  });
+}
+
+export async function sendPlaylist() {
+  const dbData = await useDb().read();
+
+  wsSend({
+    name: "playlist",
+    data: dbData?.tracks ?? [],
+  });
 }

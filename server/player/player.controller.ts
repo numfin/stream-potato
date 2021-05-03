@@ -1,16 +1,13 @@
 import { Track } from "./Track";
 import { useDb } from "../db/db.controller";
-import { MultipartFile } from "fastify-multipart";
 import * as cuid from "cuid";
-import { pipeline } from "stream";
-import { promisify } from "util";
-import { unlink } from "fs/promises";
-import { createWriteStream } from "fs";
-import { resolve } from "path";
-import { getTracksPath } from "../paths";
+import { unlink, writeFile } from "fs/promises";
+import { getFileDuration } from "../ffmpeg/getFileDuration";
 import { app } from "../app";
 import { DB } from "../db/Db";
-const pump = promisify(pipeline);
+import { ClientEvents } from "../state/WSEvents";
+import { sendPlaylist } from "../state/state.controller";
+import { getTrackPath } from "../paths";
 
 export async function loadTrackList(): Promise<Track[]> {
   const dbData = await useDb().read();
@@ -23,27 +20,37 @@ export async function getTrack(id: string): Promise<Track | undefined> {
   return dbData?.tracks?.find((track) => track.id === id);
 }
 
-export async function removeTrack(id: string): Promise<void> {
+export async function removeTrack({ id }: Track): Promise<void> {
   const db = useDb();
   const dbData = (await db.read()) as DB;
   dbData.tracks = dbData?.tracks.filter((track) => track.id !== id);
-  await unlink(resolve(getTracksPath(), id));
+  await unlink(getTrackPath(id));
   await db.write(dbData);
+
+  await sendPlaylist();
 }
 
-export async function addTrack(data: MultipartFile): Promise<void> {
-  const title = (data.fields.title as any).value;
+export async function addTrack(
+  event: ClientEvents & { name: "addTrack" },
+): Promise<void> {
   const id = cuid();
-  const filePath = resolve(getTracksPath(), id);
-  await pump(data.file, createWriteStream(filePath));
-
-  const db = useDb();
-  const dbData = await db.read();
-  if (dbData) {
-    dbData?.tracks?.push({ title, id, previewUrl: "", mime: data.mimetype });
+  const filePath = getTrackPath(id);
+  try {
+    await writeFile(filePath, event.data.file.buffer);
+    const duration = await getFileDuration(filePath);
+    const db = useDb();
+    const dbData = await db.read();
+    dbData.tracks?.push({
+      title: event.data.info.filename,
+      id,
+      previewUrl: "",
+      mime: event.data.info.mime,
+      duration,
+    });
     await db.write(dbData);
-  } else {
+    await sendPlaylist();
+  } catch (err) {
+    app.log.error(err);
     await unlink(filePath).catch((err) => app.log.fatal(err));
-    throw new Error("Unable to write track");
   }
 }

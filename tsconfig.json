@@ -2,7 +2,9 @@
   "compilerOptions": {
     "module": "CommonJS",
     "strict": true,
-    "rootDir": "./"
+    "rootDir": "./",
+    "downlevelIteration": true,
+    "target": "esnext"
   },
   "include": ["./server/index.ts", "./server/**.ts"],
   "exclude": ["node_modules"]

@@ -1,6 +1,7 @@
-import { uploadTrack } from "@/api/uploadTrack";
+import { ws } from "@/api/ws";
 import { defineComponent, ref } from "@vue/runtime-core";
-import { playlist } from "../playlist/usePlaylist";
+import { Binary } from "bson";
+import { Buffer } from "buffer";
 
 export const UploadTrack = defineComponent({
   name: "UploadTrack",
@@ -28,20 +29,19 @@ export const UploadTrack = defineComponent({
         pending.value = true;
 
         try {
-          const files = await Promise.all(
-            pickedFiles.value.map((f) =>
-              fetch(f.url)
-                .then((r) => r.blob())
-                .then((file) => ({ file, meta: f })),
-            ),
-          );
-
           await Promise.all(
-            files.map(({ file, meta }) => {
-              return uploadTrack({
-                title: meta.filename,
-                file,
-              });
+            pickedFiles.value.map((info) => {
+              return fetch(info.url)
+                .then((r) => r.blob())
+                .then(async (blob) => {
+                  ws.send({
+                    name: "addTrack",
+                    data: {
+                      info: { filename: info.filename, mime: blob.type },
+                      file: new Binary(Buffer.from(await blob.arrayBuffer())),
+                    },
+                  });
+                });
             }),
           );
         } catch (err) {
@@ -49,7 +49,6 @@ export const UploadTrack = defineComponent({
         } finally {
           reset();
           pending.value = false;
-          playlist.load();
         }
       },
     };

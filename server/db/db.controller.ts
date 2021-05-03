@@ -9,7 +9,7 @@ export function useDb<DBData extends Partial<DB>>() {
   const publicPath = getPublicPath();
   const dbPath = path.resolve(publicPath, "db.json");
 
-  async function read(): Promise<DBData | undefined> {
+  async function read(): Promise<DBData> {
     try {
       const db = await readFile(dbPath, {
         encoding: "utf-8",

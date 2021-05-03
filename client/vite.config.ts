@@ -11,7 +11,7 @@ export default defineConfig({
         target: "http://localhost:4000",
         changeOrigin: true,
       },
-      "/api/state": {
+      "/api/ws": {
         target: "ws://localhost:4000",
         changeOrigin: true,
         ws: true,

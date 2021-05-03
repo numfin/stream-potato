@@ -3,6 +3,7 @@ export interface Track {
   id: string;
   previewUrl?: string;
   mime: string;
+  duration: number;
 }
 
 export interface AddTrack {
