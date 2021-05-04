@@ -30,9 +30,7 @@ export async function initStateRoute() {
       if (event.name === "setTime") {
         playerState.setTime(event.data.time);
         playerState.change(event.data.track);
-        if (!event.data.silent) {
-          wsSendAll(getState());
-        }
+        wsSendAll(getState(), [socket]);
       }
       if (event.name === "togglePause") {
         playerState.togglePause();

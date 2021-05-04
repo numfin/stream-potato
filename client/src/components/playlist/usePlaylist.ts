@@ -2,7 +2,7 @@ import { ws } from "@/api/ws";
 import { appState } from "@/app-state";
 import { reactive, ref } from "@vue/reactivity";
 import { Track } from "server/player/Track";
-import { player } from "../player/usePlayer";
+import { playerControl } from "../player-control/usePlayerControl";
 
 function usePlaylist() {
   const tracks = ref<Track[]>([]);
@@ -13,7 +13,7 @@ function usePlaylist() {
     }),
     position() {
       return this.state.tracks.findIndex((track) => {
-        return track.id === player.state.activeTrack?.id;
+        return track.id === playerControl.state.activeTrack?.id;
       });
     },
     async removeTrack(track: Track) {

@@ -1,6 +1,6 @@
 import { computed, defineComponent, ref } from "@vue/runtime-core";
 import { withModifiers } from "@vue/runtime-dom";
-import { player } from "../player/usePlayer";
+import { playerControl } from "../player-control/usePlayerControl";
 import { RemoveIcon } from "./RemoveIcon";
 import { playlist } from "./usePlaylist";
 import Fuse from "fuse.js";
@@ -19,7 +19,7 @@ export const Playlist = defineComponent({
 
     return {
       playlist,
-      player: player,
+      player: playerControl,
       searchString,
       tracks: computed(() => {
         if (searchString.value.length > 0) {

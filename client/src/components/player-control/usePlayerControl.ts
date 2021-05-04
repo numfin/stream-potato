@@ -6,27 +6,36 @@ import { computed } from "@vue/runtime-core";
 import { Track } from "server/player/Track";
 import { playlist } from "../playlist/usePlaylist";
 
-function usePlayer() {
+function usePlayerControl() {
   const currentTime = ref(0);
+  const volume = ref(localStorage.getItem("player-volume") ?? "1");
 
   const state = reactive({
     audioEl: ref<HTMLAudioElement>(),
     activeTrack: ref<Track>(),
     isPlaying: false,
+    volume: computed({
+      get: () => volume.value,
+      set: (v: string) => {
+        volume.value = v;
+        localStorage.setItem("player-volume", v);
+      },
+    }),
     currentTime: computed({
       get: () => currentTime.value,
       set: (time: number) => {
-        if (time - state.currentTime > 1 || time < state.currentTime) {
-          if (state.activeTrack) {
-            ws.send({
-              name: "setTime",
-              data: {
-                track: state.activeTrack,
-                time,
-                silent: true,
-              },
-            });
-          }
+        const isDelayed = time - state.currentTime > 0.2;
+        const isGoingBack = time < state.currentTime;
+        const canUpdateTime = state.activeTrack && !appState.state.isControl;
+
+        if ((isDelayed || isGoingBack) && canUpdateTime) {
+          ws.send({
+            name: "setTime",
+            data: {
+              track: state.activeTrack!,
+              time,
+            },
+          });
         }
         currentTime.value = time;
       },
@@ -45,9 +54,8 @@ function usePlayer() {
         return 0;
       },
       set: (time: number) => {
-        if (state.audioEl) {
+        if (state.audioEl && !appState.state.isControl) {
           state.audioEl.currentTime = time;
-          state.currentTime = state.audioEl.currentTime;
         }
       },
     }),
@@ -57,30 +65,24 @@ function usePlayer() {
     state,
     /* set track in backend */
     setTrack(track: Track) {
-      if (appState.state.isControl) {
-        ws.send({ name: "setTrack", data: track });
-      }
+      ws.send({ name: "setTrack", data: track });
     },
     nextTrack() {
-      if (appState.state.isControl) {
-        const { tracks } = playlist.state;
-        const position = playlist.position();
-        this.setTrack(tracks[position + 1] ?? tracks[0]);
-      }
+      const { tracks } = playlist.state;
+      const position = playlist.position();
+      this.setTrack(tracks[position + 1] ?? tracks[0]);
     },
     prevTrack() {
-      if (appState.state.isControl) {
-        const { tracks } = playlist.state;
-        const position = playlist.position();
-        this.setTrack(tracks[position - 1] ?? tracks[tracks.length - 1]);
-      }
+      const { tracks } = playlist.state;
+      const position = playlist.position();
+      this.setTrack(tracks[position - 1] ?? tracks[tracks.length - 1]);
     },
     togglePause() {
       ws.send({ name: "togglePause", data: null });
     },
     progressToTime(progress: number) {
-      const { audioEl, activeTrack } = state;
-      if (!audioEl || !activeTrack) {
+      const { activeTrack } = state;
+      if (!activeTrack) {
         return 0;
       }
       const { duration } = activeTrack;
@@ -92,7 +94,7 @@ function usePlayer() {
       }
     },
     updateCurrentTime(progress: number) {
-      if (this.state.activeTrack && appState.state.isControl) {
+      if (this.state.activeTrack) {
         ws.send({
           name: "setTime",
           data: {
@@ -104,4 +106,4 @@ function usePlayer() {
     },
   };
 }
-export const player = usePlayer();
+export const playerControl = usePlayerControl();

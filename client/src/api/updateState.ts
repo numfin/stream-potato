@@ -1,9 +1,9 @@
-import { player } from "@/components/player/usePlayer";
+import { playerControl } from "@/components/player-control/usePlayerControl";
 import { PlayerState } from "server/player/player.state";
 
 export function updateState(state: PlayerState["state"]) {
-  player.state.activeTrack = state.track;
-  player.state.isPlaying = state.isPlaying;
-  player.state.currentTime = state.currentTime;
-  player.state.currentServerTime = state.currentTime;
+  playerControl.state.activeTrack = state.track;
+  playerControl.state.isPlaying = state.isPlaying;
+  playerControl.state.currentTime = state.currentTime;
+  playerControl.state.currentServerTime = state.currentTime;
 }
