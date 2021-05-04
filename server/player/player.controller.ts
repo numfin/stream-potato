@@ -1,6 +1,6 @@
 import { Track } from "./Track";
 import { useDb } from "../db/db.controller";
-import * as cuid from "cuid";
+import cuid from "cuid";
 import { unlink, writeFile } from "fs/promises";
 import { getFileDuration } from "../ffmpeg/getFileDuration";
 import { app } from "../app";

@@ -57,7 +57,7 @@ export const UploadTrack = defineComponent({
     return (
       <div class="p-4">
         <span class="font-bold text-gray-300">Add track:</span>
-        <div class="flex flex-wrap my-4" v-show={!this.pending}>
+        <div class="flex flex-wrap mt-4" v-show={!this.pending}>
           <label class="relative w-max max-w-full block bg-blue-600 text-white shadow cursor-pointer hover:bg-blue-700">
             <input
               type="file"

@@ -4,7 +4,8 @@
     "strict": true,
     "rootDir": "./",
     "downlevelIteration": true,
-    "target": "esnext"
+    "target": "esnext",
+    "esModuleInterop": true
   },
   "include": ["server/index.ts", "server/**.ts"],
   "exclude": ["node_modules"]

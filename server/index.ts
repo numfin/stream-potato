@@ -1,9 +1,10 @@
-import * as mkdirp from "mkdirp";
+import mkdirp from "mkdirp";
 import { app } from "./app";
 import { getTrackPath } from "./paths";
 import { initPlayerRoutes } from "./player/player.route";
 import { initSpaRoute } from "./spa/spa.route";
 import { initStateRoute } from "./state/state.route";
+import { initYTRoute } from "./youtube/youtube.controller";
 
 async function startServer() {
   try {
@@ -11,6 +12,7 @@ async function startServer() {
     await initPlayerRoutes();
     await initSpaRoute();
     await initStateRoute();
+    await initYTRoute();
 
     const port = process.env.PORT ?? 4000;
     const host = process.env.HOST ?? "localhost";

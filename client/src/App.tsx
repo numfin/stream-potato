@@ -5,6 +5,7 @@ import { PlayerControl } from "./components/player-control/PlayerControl";
 import { ws } from "./api/ws";
 import { appState } from "./app-state";
 import { Player } from "./components/player/Player";
+import { UploadYoutube } from "./components/upload-track/UploadYoutube";
 
 export const App = defineComponent({
   name: "App",
@@ -25,7 +26,10 @@ export const App = defineComponent({
           class="md:grid md:grid-cols-2 overflow-auto"
           style="height: calc(100vh - 8rem)"
         >
-          <UploadTrack />
+          <div>
+            <UploadTrack />
+            <UploadYoutube />
+          </div>
           <Playlist />
         </div>
         <PlayerControl />

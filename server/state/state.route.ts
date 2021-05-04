@@ -6,6 +6,7 @@ import {
   removeTrack,
 } from "../player/player.controller";
 import { playerState } from "../player/player.state";
+import { downloadYoutube } from "../youtube/youtube.controller";
 import { getState, wsSend, wsSendAll } from "./state.controller";
 import { ClientEvents } from "./WSEvents";
 
@@ -38,6 +39,9 @@ export async function initStateRoute() {
       }
       if (event.name === "removeTrack") {
         removeTrack(event.data);
+      }
+      if (event.name === "uploadYoutube") {
+        downloadYoutube(event.data.link);
       }
     });
   });

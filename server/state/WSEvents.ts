@@ -17,4 +17,5 @@ export type ClientEvents =
   | { name: "setTrack"; data: Track }
   | { name: "setTime"; data: { track: Track; time: number; silent?: boolean } }
   | { name: "removeTrack"; data: Track }
+  | { name: "uploadYoutube"; data: { link: string } }
   | { name: "togglePause"; data: null };
